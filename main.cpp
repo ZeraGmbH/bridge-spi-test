@@ -172,19 +172,21 @@ int main(int argc, char *argv[])
         return -1;
     if(!spiDevice.setMode(spiMode))
         return -1;
+    /* seems LSB first is not implemented in bbb !!! - implement software fallback */
+    bool bSWLSBFirst = false;
     if(!spiDevice.setLSBFirst(lsbFirst))
-        return -1;
+        bSWLSBFirst = true;
     if(!spiDevice.setBitsPerWord(spiBits))
         return -1;
 
     if(!strFpgaBootFileName.isEmpty())
     {
-        if(!bridge.BootLCA(&spiDevice, strFpgaBootFileName))
+        if(!bridge.BootLCA(&spiDevice, strFpgaBootFileName, bSWLSBFirst))
             return -1;
     }
     if(execCmd)
     {
-        if(!bridge.ExecCommand(&spiDevice, (BRIDGE_CMDS)spiCmd))
+        if(!bridge.ExecCommand(&spiDevice, (BRIDGE_CMDS)spiCmd, bSWLSBFirst))
             return -1;
         qInfo() << "Cmd Send: " << bridge.sendDataAsHex();
         qInfo() << "Cmd Receive: " << bridge.receiveDataAsHex();

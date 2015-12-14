@@ -10,14 +10,33 @@ CZeraBridgeSPI::CZeraBridgeSPI()
 {
 }
 
-bool CZeraBridgeSPI::BootLCA(QIODevice *pIODevice, const QString &strLCABootFileName)
+// taken from http://stackoverflow.com/questions/2602823/in-c-c-whats-the-simplest-way-to-reverse-the-order-of-bits-in-a-byte
+static quint8 reverse(quint8 b) {
+   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+   b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+   return b;
+}
+
+QByteArray reverseArray(const QByteArray& data)
+{
+    QByteArray ret;
+    for(int i=0; i<data.size(); i++)
+        ret.append(reverse(data.at(i)));
+    return ret;
+}
+
+bool CZeraBridgeSPI::BootLCA(QIODevice *pIODevice, const QString &strLCABootFileName, bool bSWLSBFirst)
 {
     bool bOK = true;
     QFile fileFpgaBin(strLCABootFileName);
     if(fileFpgaBin.open(QIODevice::ReadOnly))
     {
         qint64 fileSize = fileFpgaBin.size();
-        qint64 sendSize = pIODevice->write(fileFpgaBin.read(fileSize));
+        QByteArray data = fileFpgaBin.read(fileSize);
+        if(bSWLSBFirst)
+            data = reverseArray(data);
+        qint64 sendSize = pIODevice->write(data);
         if(sendSize != fileSize)
         {
             qCritical("FPGA bootfile'%s' was not send completely (send %lli of %lli)!",
@@ -45,7 +64,7 @@ bool CZeraBridgeSPI::BootLCA(QIODevice *pIODevice, const QString &strLCABootFile
 #define BRIDGE_SPI_FRAME_LEN 5
 
 /* Note: kernel currently supports synchronous I/O only */
-bool CZeraBridgeSPI::ExecCommand(QIODevice *pIODevice, BRIDGE_CMDS cmd, QByteArray *pParamData)
+bool CZeraBridgeSPI::ExecCommand(QIODevice *pIODevice, BRIDGE_CMDS cmd, bool bSWLSBFirst, QByteArray *pParamData)
 {
     bool bOK = true;
     if(!pIODevice->isOpen())
@@ -81,6 +100,8 @@ bool CZeraBridgeSPI::ExecCommand(QIODevice *pIODevice, BRIDGE_CMDS cmd, QByteArr
             else
                 m_SendData.append((char)0);
         }
+        if(bSWLSBFirst)
+            m_SendData = reverseArray(m_SendData);
         bOK = pIODevice->write(m_SendData) == BRIDGE_SPI_FRAME_LEN;
         m_ReceiveData.clear();
         if(bOK)
@@ -89,6 +110,8 @@ bool CZeraBridgeSPI::ExecCommand(QIODevice *pIODevice, BRIDGE_CMDS cmd, QByteArr
             {
                 /* Transfer 2: read data */
                 m_ReceiveData = pIODevice->read(BRIDGE_SPI_FRAME_LEN);
+                if(bSWLSBFirst)
+                    m_ReceiveData = reverseArray(m_ReceiveData);
                 bOK = m_ReceiveData.size() == BRIDGE_SPI_FRAME_LEN;
                 if(!bOK)
                     qCritical("Reading command response was not completed!");

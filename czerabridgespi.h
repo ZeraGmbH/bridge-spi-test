@@ -17,8 +17,8 @@ class CZeraBridgeSPI
 {
 public:
     CZeraBridgeSPI();
-    bool BootLCA(QIODevice *pIODevice, const QString& strLCABootFileName);
-    bool ExecCommand(QIODevice *pIODevice, enum BRIDGE_CMDS cmd, QByteArray *pParamData = NULL);
+    bool BootLCA(QIODevice *pIODevice, const QString& strLCABootFileName, bool bSWLSBFirst);
+    bool ExecCommand(QIODevice *pIODevice, enum BRIDGE_CMDS cmd, bool bSWLSBFirst, QByteArray *pParamData = NULL);
     const QByteArray& sendData() { return m_SendData; }
     const QByteArray& receiveData() { return m_ReceiveData; }
     const QString sendDataAsHex();
