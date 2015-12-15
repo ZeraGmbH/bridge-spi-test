@@ -175,7 +175,10 @@ int main(int argc, char *argv[])
     /* seems LSB first is not implemented in bbb !!! - implement software fallback */
     bool bSWLSBFirst = false;
     if(!spiDevice.setLSBFirst(lsbFirst))
+    {
         bSWLSBFirst = true;
+        qInfo("Enabling software bit reversing fallback.");
+    }
     if(!spiDevice.setBitsPerWord(spiBits))
         return -1;
 
