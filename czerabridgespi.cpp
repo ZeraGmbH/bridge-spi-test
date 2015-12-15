@@ -39,7 +39,7 @@ bool CZeraBridgeSPI::BootLCA(QIODevice *pIODevice, const QString &strLCABootFile
         qint64 sendSize = pIODevice->write(data);
         if(sendSize != fileSize)
         {
-            qCritical("FPGA bootfile'%s' was not send completely (send %lli of %lli)!",
+            qWarning("FPGA bootfile'%s' was not send completely (send %lli of %lli)!",
                       qPrintable(strLCABootFileName),
                       sendSize, fileSize);
             bOK = false;
@@ -55,7 +55,7 @@ bool CZeraBridgeSPI::BootLCA(QIODevice *pIODevice, const QString &strLCABootFile
     }
     else
     {
-        qCritical("FPGA bootfile'%s' could not be opened!", qPrintable(strLCABootFileName));
+        qWarning("FPGA bootfile'%s' could not be opened!", qPrintable(strLCABootFileName));
         bOK = false;
     }
     return bOK;
@@ -69,7 +69,7 @@ bool CZeraBridgeSPI::ExecCommand(QIODevice *pIODevice, BRIDGE_CMDS cmd, bool bSW
     bool bOK = true;
     if(!pIODevice->isOpen())
     {
-        qCritical("ExecCommand: SPI device not open!");
+        qWarning("ExecCommand: SPI device not open!");
         bOK = false;
     }
     else
@@ -114,11 +114,11 @@ bool CZeraBridgeSPI::ExecCommand(QIODevice *pIODevice, BRIDGE_CMDS cmd, bool bSW
                     m_ReceiveData = reverseArray(m_ReceiveData);
                 bOK = m_ReceiveData.size() == BRIDGE_SPI_FRAME_LEN;
                 if(!bOK)
-                    qCritical("Reading command response was not completed!");
+                    qWarning("Reading command response was not completed!");
             }
         }
         else
-            qCritical("Sending command was not completed!");
+            qWarning("Sending command was not completed!");
     }
     return bOK;
 }

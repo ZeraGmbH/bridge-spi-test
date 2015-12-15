@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
             spiBus = iVal;
         else
         {
-            qCritical("Invalid value for SPI bus %s!\n", qPrintable(strOptVal));
+            qWarning("Invalid value for SPI bus %s!\n", qPrintable(strOptVal));
             optionsOK = false;
         }
     }
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
             spiChannel = iVal;
         else
         {
-            qCritical("Invalid value for SPI channel %s!\n", qPrintable(strOptVal));
+            qWarning("Invalid value for SPI channel %s!\n", qPrintable(strOptVal));
             optionsOK = false;
         }
     }
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
             spiSpeed = u32Val;
         else
         {
-            qCritical("Invalid value for SPI speed %s!\n", qPrintable(strOptVal));
+            qWarning("Invalid value for SPI speed %s!\n", qPrintable(strOptVal));
             optionsOK = false;
         }
     }
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
             spiMode = u8Val;
         else
         {
-            qCritical("Invalid value for SPI mode %s!\n", qPrintable(strOptVal));
+            qWarning("Invalid value for SPI mode %s!\n", qPrintable(strOptVal));
             optionsOK = false;
         }
     }
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
             spiBits = u8Val;
         else
         {
-            qCritical("Invalid value for SPI bits per word %s!\n", qPrintable(strOptVal));
+            qWarning("Invalid value for SPI bits per word %s!\n", qPrintable(strOptVal));
             optionsOK = false;
         }
     }
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            qCritical("Invalid value for SPI command %s!\n", qPrintable(strOptVal));
+            qWarning("Invalid value for SPI command %s!\n", qPrintable(strOptVal));
             optionsOK = false;
         }
     }
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     /* check for unknown arguments */
     if(parser.positionalArguments().size())
     {
-        qCritical("Invalid command line parameters '%s'!\n", qPrintable(parser.positionalArguments().join(" ")));
+        qWarning("Invalid command line parameters '%s'!\n", qPrintable(parser.positionalArguments().join(" ")));
         optionsOK = false;
     }
 
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 
     if(!spiDevice.open(QIODevice::ReadWrite))
     {
-        qCritical("Device %s could not be opened!\n", qPrintable(spiDevice.fileName()));
+        qWarning("Device %s could not be opened!\n", qPrintable(spiDevice.fileName()));
         return -1;
     }
     if(!spiDevice.setBitSpeed(spiSpeed))

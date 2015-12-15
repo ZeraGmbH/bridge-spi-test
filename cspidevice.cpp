@@ -27,7 +27,7 @@ bool CSPIDevice::open(OpenMode flags)
 
         if(!bOpen)
         {
-            qCritical("%s does not support SPI ioctls!", qPrintable(fileName()));
+            qWarning("%s does not support SPI ioctls!", qPrintable(fileName()));
             close();
         }
     }
@@ -59,19 +59,19 @@ bool CSPIDevice::setMode(quint8 Mode)
         mode = SPI_MODE_3;
         break;
     default:
-        qCritical("SetMode: invalid mode %u!", Mode);
+        qWarning("SetMode: invalid mode %u!", Mode);
         return false;
     }
 
     if(!isOpen())
     {
-        qCritical("SetMode: SPI device not open!");
+        qWarning("SetMode: SPI device not open!");
         return false;
     }
     else
     {
         if(ioctl(handle(), SPI_IOC_WR_MODE, &mode) < 0)
-            qCritical("CSPIDevice::SetMode failed!");
+            qWarning("CSPIDevice::SetMode failed!");
     }
     return true;
 }
@@ -82,7 +82,7 @@ bool CSPIDevice::setLSBFirst(bool lsbFirst)
     bool bOK = true;
     if(!isOpen())
     {
-        qCritical("SetLSBFirst: SPI device not open!");
+        qWarning("SetLSBFirst: SPI device not open!");
         bOK = false;
     }
     else
@@ -90,7 +90,7 @@ bool CSPIDevice::setLSBFirst(bool lsbFirst)
         __u8 lsb = (__u8)lsbFirst;
         bOK = ioctl(handle(), SPI_IOC_WR_LSB_FIRST, &lsb) >= 0;
         if(!bOK)
-            qCritical("CSPIDevice::SetLSBFirst failed!");
+            qWarning("CSPIDevice::SetLSBFirst failed!");
     }
     return bOK;
 }
@@ -101,7 +101,7 @@ bool CSPIDevice::setBitsPerWord(quint8 bitsPerWord)
     bool bOK = true;
     if(!isOpen())
     {
-        qCritical("SetBitsPerWord: SPI device not open!");
+        qWarning("SetBitsPerWord: SPI device not open!");
         bOK = false;
     }
     else
@@ -109,7 +109,7 @@ bool CSPIDevice::setBitsPerWord(quint8 bitsPerWord)
         __u8 bits = (__u8)bitsPerWord;
         bOK = ioctl(handle(), SPI_IOC_WR_BITS_PER_WORD, &bits) >= 0;
         if(!bOK)
-            qCritical("CSPIDevice::SetBitsPerWord failed!");
+            qWarning("CSPIDevice::SetBitsPerWord failed!");
     }
     return bOK;
 }
@@ -120,7 +120,7 @@ bool CSPIDevice::setBitSpeed(quint32 bitSpeedHz)
     bool bOK = true;
     if(!isOpen())
     {
-        qCritical("SetBitSpeed: SPI device not open!");
+        qWarning("SetBitSpeed: SPI device not open!");
         bOK = false;
     }
     else
@@ -128,7 +128,7 @@ bool CSPIDevice::setBitSpeed(quint32 bitSpeedHz)
         __u32 hz = (__u32)bitSpeedHz;
         bOK = ioctl(handle(), SPI_IOC_WR_MAX_SPEED_HZ, &hz) >= 0;
         if(!bOK)
-            qCritical("CSPIDevice::SetBitSpeed failed!");
+            qWarning("CSPIDevice::SetBitSpeed failed!");
     }
     return bOK;
 }
