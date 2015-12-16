@@ -5,14 +5,16 @@
 
 CSPIDevice::CSPIDevice(int bus, int channel)
 {
+    m_bSWReverseRequired = false;
+    m_u8LSBFirstOnOpen = 0;
     QString strFileName = QString("/dev/spidev%1.%2").arg(bus).arg(channel);
     setFileName(strFileName);
 }
 
 bool CSPIDevice::open(OpenMode flags)
 {
-    flags |= QIODevice::Unbuffered;
     qInfo("SPI opening %s...", qPrintable(fileName()));
+    flags |= QIODevice::Unbuffered;
     bool bOpen = exists() && QFile::open(flags);
     if(bOpen)
     {
@@ -21,7 +23,7 @@ bool CSPIDevice::open(OpenMode flags)
         __u32 dummy32;
         bOpen =
             ioctl(handle(), SPI_IOC_RD_MODE, &dummy) >= 0 &&
-            ioctl(handle(), SPI_IOC_RD_LSB_FIRST, &dummy) >= 0 &&
+            ioctl(handle(), SPI_IOC_RD_LSB_FIRST, &m_u8LSBFirstOnOpen) >= 0 &&
             ioctl(handle(), SPI_IOC_RD_BITS_PER_WORD, &dummy) >= 0 &&
             ioctl(handle(), SPI_IOC_WR_MAX_SPEED_HZ, &dummy32) >= 0;
 
@@ -30,6 +32,7 @@ bool CSPIDevice::open(OpenMode flags)
             qWarning("%s does not support SPI ioctls!", qPrintable(fileName()));
             close();
         }
+        m_bSWReverseRequired = false;
     }
     return bOpen;
 }
@@ -90,7 +93,15 @@ bool CSPIDevice::setLSBFirst(bool lsbFirst)
         __u8 lsb = (__u8)lsbFirst;
         bOK = ioctl(handle(), SPI_IOC_WR_LSB_FIRST, &lsb) >= 0;
         if(!bOK)
+        {
             qWarning("CSPIDevice::SetLSBFirst failed!");
+            if(m_u8LSBFirstOnOpen != lsbFirst)
+            {
+                m_bSWReverseRequired = true;
+                qInfo("Software bit reversing is used.");
+                bOK = true;
+            }
+        }
     }
     return bOK;
 }
@@ -131,4 +142,42 @@ bool CSPIDevice::setBitSpeed(quint32 bitSpeedHz)
             qWarning("CSPIDevice::SetBitSpeed failed!");
     }
     return bOK;
+}
+
+// taken from http://stackoverflow.com/questions/2602823/in-c-c-whats-the-simplest-way-to-reverse-the-order-of-bits-in-a-byte
+static quint8 reverse(quint8 b) {
+   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+   b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+   return b;
+}
+
+qint64 CSPIDevice::readData(char *data, qint64 maxlen)
+{
+    qint64 bytesRead = QFile::readData(data, maxlen);
+    if(m_bSWReverseRequired)
+    {
+        for(qint64 iByte=0; iByte<bytesRead; iByte++)
+            data[iByte] = (char)reverse((quint8)data[iByte]);
+    }
+    return bytesRead;
+}
+
+qint64 CSPIDevice::writeData(const char *data, qint64 len)
+{
+    qint64 bytesWritten = -1;
+    if(m_bSWReverseRequired)
+    {
+        char *copyData = new char(len);
+        if(copyData)
+        {
+            for(qint64 iByte=0; iByte<len; iByte++)
+                copyData[iByte] = (char)reverse((quint8)data[iByte]);
+            bytesWritten = QFile::writeData(copyData, len);
+            delete[] copyData;
+        }
+    }
+    else
+        bytesWritten = QFile::writeData(data, len);
+    return bytesWritten;
 }

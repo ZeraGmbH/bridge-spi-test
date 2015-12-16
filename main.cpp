@@ -172,24 +172,18 @@ int main(int argc, char *argv[])
         return -1;
     if(!spiDevice.setMode(spiMode))
         return -1;
-    /* seems LSB first is not implemented in bbb !!! - implement software fallback */
-    bool bSWLSBFirst = false;
     if(!spiDevice.setLSBFirst(lsbFirst))
-    {
-        bSWLSBFirst = true;
-        qInfo("Enabling software bit reversing fallback.");
-    }
+        return -1;
     if(!spiDevice.setBitsPerWord(spiBits))
         return -1;
-
     if(!strFpgaBootFileName.isEmpty())
     {
-        if(!bridge.BootLCA(&spiDevice, strFpgaBootFileName, bSWLSBFirst))
+        if(!bridge.BootLCA(&spiDevice, strFpgaBootFileName))
             return -1;
     }
     if(execCmd)
     {
-        if(!bridge.ExecCommand(&spiDevice, (BRIDGE_CMDS)spiCmd, bSWLSBFirst))
+        if(!bridge.ExecCommand(&spiDevice, (BRIDGE_CMDS)spiCmd))
             return -1;
         qInfo() << "Cmd Send: " << bridge.sendDataAsHex();
         qInfo() << "Cmd Receive: " << bridge.receiveDataAsHex();
