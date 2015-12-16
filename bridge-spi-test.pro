@@ -21,7 +21,8 @@ SOURCES += main.cpp \
 
 HEADERS += \
     czerabridgespi.h \
-    cspidevice.h
+    qspidevice.h \
+    qspidevice_p.h
 
 target.path = /usr/bin
 INSTALLS += target

@@ -1,18 +1,38 @@
 #include <sys/ioctl.h>
 #include <linux/types.h>
 #include <QString>
-#include "cspidevice.h"
+#include "qspidevice.h"
+#include "qspidevice_p.h"
 
-CSPIDevice::CSPIDevice(int bus, int channel)
+// ************* QSPIDevicePrivate
+
+QSPIDevicePrivate::QSPIDevicePrivate()
 {
-    m_bSWReverseRequired = false;
-    m_u8LSBFirstOnOpen = 0;
+    bSWReverseRequired = false;
+}
+
+QSPIDevicePrivate::~QSPIDevicePrivate()
+{
+}
+
+// ************* QSPIDevice
+
+QSPIDevice::QSPIDevice(const QString &name) :
+    QFile(name),
+    d_ptr(new QSPIDevicePrivate())
+{
+}
+
+QSPIDevice::QSPIDevice(int bus, int channel) :
+    d_ptr(new QSPIDevicePrivate())
+{
     QString strFileName = QString("/dev/spidev%1.%2").arg(bus).arg(channel);
     setFileName(strFileName);
 }
 
-bool CSPIDevice::open(OpenMode flags)
+bool QSPIDevice::open(OpenMode flags)
 {
+    Q_D(QSPIDevice);
     qInfo("SPI opening %s...", qPrintable(fileName()));
     flags |= QIODevice::Unbuffered;
     bool bOpen = exists() && QFile::open(flags);
@@ -23,7 +43,7 @@ bool CSPIDevice::open(OpenMode flags)
         __u32 dummy32;
         bOpen =
             ioctl(handle(), SPI_IOC_RD_MODE, &dummy) >= 0 &&
-            ioctl(handle(), SPI_IOC_RD_LSB_FIRST, &m_u8LSBFirstOnOpen) >= 0 &&
+            ioctl(handle(), SPI_IOC_RD_LSB_FIRST, &dummy) >= 0 &&
             ioctl(handle(), SPI_IOC_RD_BITS_PER_WORD, &dummy) >= 0 &&
             ioctl(handle(), SPI_IOC_WR_MAX_SPEED_HZ, &dummy32) >= 0;
 
@@ -32,18 +52,18 @@ bool CSPIDevice::open(OpenMode flags)
             qWarning("%s does not support SPI ioctls!", qPrintable(fileName()));
             close();
         }
-        m_bSWReverseRequired = false;
+        d->bSWReverseRequired = false;
     }
     return bOpen;
 }
 
-void CSPIDevice::close()
+void QSPIDevice::close()
 {
     qInfo("SPI closing %s...", qPrintable(fileName()));
     return QFile::close();
 }
 
-bool CSPIDevice::setMode(quint8 Mode)
+bool QSPIDevice::setMode(quint8 Mode)
 {
     qInfo("SPI set mode %u...", Mode);
     __u8 mode = 0;
@@ -74,13 +94,14 @@ bool CSPIDevice::setMode(quint8 Mode)
     else
     {
         if(ioctl(handle(), SPI_IOC_WR_MODE, &mode) < 0)
-            qWarning("CSPIDevice::SetMode failed!");
+            qWarning("QSPIDevice::SetMode failed!");
     }
     return true;
 }
 
-bool CSPIDevice::setLSBFirst(bool lsbFirst)
+bool QSPIDevice::setLSBFirst(bool lsbFirst)
 {
+    Q_D(QSPIDevice);
     qInfo("SPI LSBFirst %u...", lsbFirst);
     bool bOK = true;
     if(!isOpen())
@@ -94,19 +115,17 @@ bool CSPIDevice::setLSBFirst(bool lsbFirst)
         bOK = ioctl(handle(), SPI_IOC_WR_LSB_FIRST, &lsb) >= 0;
         if(!bOK)
         {
-            qWarning("CSPIDevice::SetLSBFirst failed!");
-            if(m_u8LSBFirstOnOpen != lsbFirst)
-            {
-                m_bSWReverseRequired = true;
+            qWarning("QSPIDevice::SetLSBFirst failed!");
+            if(lsbFirst)
                 qInfo("Software bit reversing is used.");
-                bOK = true;
-            }
+            d->bSWReverseRequired = lsbFirst;
+            bOK = true;
         }
     }
     return bOK;
 }
 
-bool CSPIDevice::setBitsPerWord(quint8 bitsPerWord)
+bool QSPIDevice::setBitsPerWord(quint8 bitsPerWord)
 {
     qInfo("SPI bits per word %u...", bitsPerWord);
     bool bOK = true;
@@ -120,12 +139,12 @@ bool CSPIDevice::setBitsPerWord(quint8 bitsPerWord)
         __u8 bits = (__u8)bitsPerWord;
         bOK = ioctl(handle(), SPI_IOC_WR_BITS_PER_WORD, &bits) >= 0;
         if(!bOK)
-            qWarning("CSPIDevice::SetBitsPerWord failed!");
+            qWarning("QSPIDevice::SetBitsPerWord failed!");
     }
     return bOK;
 }
 
-bool CSPIDevice::setBitSpeed(quint32 bitSpeedHz)
+bool QSPIDevice::setBitSpeed(quint32 bitSpeedHz)
 {
     qInfo("SPI bitspeed %u Hz...", bitSpeedHz);
     bool bOK = true;
@@ -139,7 +158,7 @@ bool CSPIDevice::setBitSpeed(quint32 bitSpeedHz)
         __u32 hz = (__u32)bitSpeedHz;
         bOK = ioctl(handle(), SPI_IOC_WR_MAX_SPEED_HZ, &hz) >= 0;
         if(!bOK)
-            qWarning("CSPIDevice::SetBitSpeed failed!");
+            qWarning("QSPIDevice::SetBitSpeed failed!");
     }
     return bOK;
 }
@@ -152,10 +171,11 @@ static quint8 reverse(quint8 b) {
    return b;
 }
 
-qint64 CSPIDevice::readData(char *data, qint64 maxlen)
+qint64 QSPIDevice::readData(char *data, qint64 maxlen)
 {
+    Q_D(QSPIDevice);
     qint64 bytesRead = QFile::readData(data, maxlen);
-    if(m_bSWReverseRequired)
+    if(d->bSWReverseRequired)
     {
         for(qint64 iByte=0; iByte<bytesRead; iByte++)
             data[iByte] = (char)reverse((quint8)data[iByte]);
@@ -163,10 +183,11 @@ qint64 CSPIDevice::readData(char *data, qint64 maxlen)
     return bytesRead;
 }
 
-qint64 CSPIDevice::writeData(const char *data, qint64 len)
+qint64 QSPIDevice::writeData(const char *data, qint64 len)
 {
+    Q_D(QSPIDevice);
     qint64 bytesWritten = -1;
-    if(m_bSWReverseRequired)
+    if(d->bSWReverseRequired)
     {
         char *copyData = new char(len);
         if(copyData)

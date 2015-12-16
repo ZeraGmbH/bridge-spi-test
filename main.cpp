@@ -1,7 +1,7 @@
 #include <QCoreApplication>
 #include <QCommandLineParser>
 #include <QDebug>
-#include "cspidevice.h"
+#include "qspidevice.h"
 #include "czerabridgespi.h"
 
 
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
     /*return a.exec();*/
 
     // Now setup required objects
-    CSPIDevice spiDevice(spiBus, spiChannel);
+    QSPIDevice spiDevice(spiBus, spiChannel);
     CZeraBridgeSPI bridge;
 
     if(!spiDevice.open(QIODevice::ReadWrite))

@@ -1,14 +1,16 @@
-#ifndef CSPIDEVICE_H
-#define CSPIDEVICE_H
+#ifndef QSPIDevice_H
+#define QSPIDevice_H
 
 #include <linux/spi/spidev.h>
 #include <QFile>
 
-class CSPIDevice : public QFile
+class QSPIDevicePrivate;
+
+class QSPIDevice : public QFile
 {
-    Q_OBJECT
 public:
-    CSPIDevice(int bus, int channel);
+    QSPIDevice(const QString & name);
+    QSPIDevice(int bus, int channel);
     virtual bool open(OpenMode flags) Q_DECL_OVERRIDE;
     virtual void close() Q_DECL_OVERRIDE;
 
@@ -20,9 +22,8 @@ protected:
     virtual qint64 readData(char *data, qint64 maxlen) Q_DECL_OVERRIDE;
     virtual qint64 writeData(const char *data, qint64 len) Q_DECL_OVERRIDE;
 private:
-    // At least beaglebo. does not support LSBFirst. We implement a software fallback
-    bool m_bSWReverseRequired;
-    quint8 m_u8LSBFirstOnOpen;
+    QSPIDevicePrivate *d_ptr;
+    Q_DECLARE_PRIVATE(QSPIDevice)
 };
 
-#endif // CSPIDEVICE_H
+#endif // QSPIDevice_H
