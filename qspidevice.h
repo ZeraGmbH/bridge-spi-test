@@ -13,7 +13,7 @@ public:
     QSPIDevice(int bus, int channel);
     virtual bool open(OpenMode flags) Q_DECL_OVERRIDE;
     virtual void close() Q_DECL_OVERRIDE;
-
+    virtual bool isSequential() const Q_DECL_OVERRIDE;
     bool setMode(quint8 Mode);
     bool setLSBFirst(bool lsbFirst);
     bool setBitsPerWord(quint8 bitsPerWord);

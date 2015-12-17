@@ -63,6 +63,11 @@ void QSPIDevice::close()
     return QFile::close();
 }
 
+bool QSPIDevice::isSequential() const
+{
+    return true;
+}
+
 bool QSPIDevice::setMode(quint8 Mode)
 {
     qInfo("SPI set mode %u...", Mode);
