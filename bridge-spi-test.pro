@@ -17,7 +17,7 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     czerabridgespi.cpp \
-    cspidevice.cpp
+    qspidevice.cpp
 
 HEADERS += \
     czerabridgespi.h \
