@@ -194,7 +194,7 @@ qint64 QSPIDevice::writeData(const char *data, qint64 len)
     qint64 bytesWritten = -1;
     if(d->bSWReverseRequired)
     {
-        char *copyData = new char(len);
+        char *copyData = new char[len];
         if(copyData)
         {
             for(qint64 iByte=0; iByte<len; iByte++)
