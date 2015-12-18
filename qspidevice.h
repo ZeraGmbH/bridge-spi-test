@@ -18,6 +18,7 @@ public:
     bool setLSBFirst(bool lsbFirst);
     bool setBitsPerWord(quint8 bitsPerWord);
     bool setBitSpeed(quint32 bitSpeedHz);
+    bool sendReceive(QByteArray& dataSend, QByteArray& dataReceive);
 protected:
     virtual qint64 readData(char *data, qint64 maxlen) Q_DECL_OVERRIDE;
     virtual qint64 writeData(const char *data, qint64 len) Q_DECL_OVERRIDE;

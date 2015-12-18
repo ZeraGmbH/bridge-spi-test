@@ -46,6 +46,10 @@ int main(int argc, char *argv[])
     QCommandLineOption cmdOption(QStringList() << "o" << "command", "Bridge SPI-command number", "command-no");
     parser.addOption(cmdOption);
 
+    // option for hexadecimal transparent I/O
+    QCommandLineOption transIOHexOption(QStringList() << "x" << "hexdata", "I/O hexadecimal data", "hexdata");
+    parser.addOption(transIOHexOption);
+
     /* --------------- extract params --------------- */
     parser.process(a);
 
@@ -141,6 +145,32 @@ int main(int argc, char *argv[])
     }
 
     QString strFpgaBootFileName = parser.value(fpgaBootOption);
+    QString strSendHex = parser.value(transIOHexOption);
+    QByteArray dataSendTrans;
+    if(!strSendHex.isEmpty())
+    {
+        if(strSendHex.size() % 2 == 0)
+        {
+            bool bConversionOK = true;
+            for(int iHex=0; iHex<strSendHex.size() && bConversionOK; iHex+=2)
+            {
+                QString strHexNum = strSendHex.mid(iHex, 2);
+                quint8 u8Val = strHexNum.toShort(&bConversionOK, 16);
+                if(bConversionOK)
+                    dataSendTrans.append(u8Val);
+            }
+            if(!bConversionOK)
+            {
+                qWarning("Parameter %s is not a valid hexadecimal number!\n", qPrintable(strSendHex));
+                optionsOK = false;
+            }
+        }
+        else
+        {
+            qWarning("Hexadecimal number %s must have even length!\n", qPrintable(strSendHex));
+            optionsOK = false;
+        }
+    }
 
     bool lsbFirst = parser.isSet(lsbOption);
 
@@ -185,8 +215,16 @@ int main(int argc, char *argv[])
     {
         if(!bridge.ExecCommand(&spiDevice, (BRIDGE_CMDS)spiCmd))
             return -1;
-        qInfo() << "Cmd Send: " << bridge.sendDataAsHex();
-        qInfo() << "Cmd Receive: " << bridge.receiveDataAsHex();
+        qInfo() << "Cmd Send: " << bridge.sendData().toHex().toUpper();
+        qInfo() << "Cmd Receive: " << bridge.receiveData().toHex().toUpper();
+    }
+    if(dataSendTrans.size() > 0)
+    {
+        QByteArray dataReceive;
+        if(!spiDevice.sendReceive(dataSendTrans, dataReceive))
+            return -1;
+        qInfo() << "Data Send: " << dataSendTrans.toHex().toUpper();
+        qInfo() << "Data Receive: " << dataReceive.toHex().toUpper();
     }
     spiDevice.close();
 

@@ -144,7 +144,7 @@ bool QSPIDevice::setBitsPerWord(quint8 bitsPerWord)
         __u8 bits = (__u8)bitsPerWord;
         bOK = ioctl(handle(), SPI_IOC_WR_BITS_PER_WORD, &bits) >= 0;
         if(!bOK)
-            qWarning("QSPIDevice::SetBitsPerWord failed!");
+            qWarning("QSPIDevice::setBitsPerWord failed!");
     }
     return bOK;
 }
@@ -155,7 +155,7 @@ bool QSPIDevice::setBitSpeed(quint32 bitSpeedHz)
     bool bOK = true;
     if(!isOpen())
     {
-        qWarning("SetBitSpeed: SPI device not open!");
+        qWarning("QSPIDevice::setBitSpeed: device not open!");
         bOK = false;
     }
     else
@@ -163,7 +163,37 @@ bool QSPIDevice::setBitSpeed(quint32 bitSpeedHz)
         __u32 hz = (__u32)bitSpeedHz;
         bOK = ioctl(handle(), SPI_IOC_WR_MAX_SPEED_HZ, &hz) >= 0;
         if(!bOK)
-            qWarning("QSPIDevice::SetBitSpeed failed!");
+            qWarning("QSPIDevice::setBitSpeed failed!");
+    }
+    return bOK;
+}
+
+bool QSPIDevice::sendReceive(QByteArray &dataSend, QByteArray &dataReceive)
+{
+    bool bOK = true;
+    if(!isOpen())
+    {
+        qWarning("QSPIDevice::sendReceive: device not open!");
+        bOK = false;
+    }
+    if(dataSend.size() == 0)
+    {
+        qWarning("QSPIDevice::sendReceive: dataSend is empty!");
+        bOK = false;
+    }
+    if(bOK)
+    {
+        dataReceive.resize(dataSend.size());
+        struct spi_ioc_transfer	spi_io;
+        memset(&spi_io, 0, sizeof spi_io);
+        spi_io.tx_buf = (__u64)dataSend.constData();
+        spi_io.rx_buf = (__u64)dataReceive.data();
+        spi_io.len = dataSend.size();
+        if(ioctl(handle(), SPI_IOC_MESSAGE(1), &spi_io) < 0)
+        {
+            qWarning("QSPIDevice::sendReceive: SPI_IOC_MESSAGE failed!");
+            bOK = false;
+        }
     }
     return bOK;
 }

@@ -21,8 +21,6 @@ public:
     bool ExecCommand(QIODevice *pIODevice, enum BRIDGE_CMDS cmd, QByteArray *pParamData = NULL);
     const QByteArray& sendData() { return m_SendData; }
     const QByteArray& receiveData() { return m_ReceiveData; }
-    const QString sendDataAsHex();
-    const QString receiveDataAsHex();
 protected:
     QByteArray m_SendData;
     QByteArray m_ReceiveData;

@@ -100,20 +100,3 @@ bool CZeraBridgeSPI::ExecCommand(QIODevice *pIODevice, BRIDGE_CMDS cmd, QByteArr
     }
     return bOK;
 }
-
-const QString CZeraBridgeSPI::sendDataAsHex()
-{
-    QString strRet;
-    for(int iByte=0; iByte<m_SendData.size(); iByte++)
-        strRet += QString::asprintf("%02X", m_SendData.at(iByte));
-    return strRet;
-}
-
-const QString CZeraBridgeSPI::receiveDataAsHex()
-{
-    QString strRet;
-    for(int iByte=0; iByte<m_ReceiveData.size(); iByte++)
-        strRet += QString::asprintf("%02X", m_ReceiveData.at(iByte));
-    return strRet;
-}
-
