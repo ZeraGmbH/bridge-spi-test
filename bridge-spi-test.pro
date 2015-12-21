@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core
+QT       += core spidevice
 
 QT       -= gui
 
@@ -16,13 +16,10 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    czerabridgespi.cpp \
-    qspidevice.cpp
+    czerabridgespi.cpp
 
 HEADERS += \
-    czerabridgespi.h \
-    qspidevice.h \
-    qspidevice_p.h
+    czerabridgespi.h
 
 target.path = /usr/bin
 INSTALLS += target

@@ -1,7 +1,7 @@
 #include <QCoreApplication>
 #include <QCommandLineParser>
 #include <QDebug>
-#include "qspidevice.h"
+#include <QSPIDevice>
 #include "czerabridgespi.h"
 
 
