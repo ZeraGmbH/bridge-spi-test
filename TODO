@@ -1,0 +1,3 @@
+* CZeraBridgeSPI::BootLCA Check gpio for booted fpga
+* add CZeraBridgeSPI::resetLCA
+* move CZeraBridgeSPI to a more common place e.g ZeraClasses
