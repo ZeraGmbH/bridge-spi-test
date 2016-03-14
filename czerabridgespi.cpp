@@ -71,26 +71,26 @@ bool CZeraBridgeSPI::ExecCommand(QIODevice *pIODevice, BRIDGE_CMDS cmd, QByteArr
         }
 
         /* Transfer 1: read cmd / write */
-        m_SendData.clear();
+        m_SendRawData.clear();
         /* cmd */
-        m_SendData.append(bReadCmd ? (char)cmd | 0x80: (char)cmd);
+        m_SendRawData.append(bReadCmd ? (char)cmd | 0x80: (char)cmd);
         /* cmd param */
         for(int iParam=0; iParam<BRIDGE_SPI_FRAME_LEN-1;iParam++)
         {
             if(pParamData && pParamData->size() > iParam)
-                m_SendData.append(pParamData->at(iParam));
+                m_SendRawData.append(pParamData->at(iParam));
             else
-                m_SendData.append((char)0);
+                m_SendRawData.append((char)0);
         }
-        bOK = pIODevice->write(m_SendData) == BRIDGE_SPI_FRAME_LEN;
-        m_ReceiveData.clear();
+        bOK = pIODevice->write(m_SendRawData) == BRIDGE_SPI_FRAME_LEN;
+        m_ReceiveRawData.clear();
         if(bOK)
         {
             if(bReadCmd)
             {
                 /* Transfer 2: read data */
-                m_ReceiveData = pIODevice->read(BRIDGE_SPI_FRAME_LEN);
-                bOK = m_ReceiveData.size() == BRIDGE_SPI_FRAME_LEN;
+                m_ReceiveRawData = pIODevice->read(BRIDGE_SPI_FRAME_LEN);
+                bOK = m_ReceiveRawData.size() == BRIDGE_SPI_FRAME_LEN;
                 if(!bOK)
                     qWarning("Reading command response was not completed!");
             }
@@ -99,4 +99,93 @@ bool CZeraBridgeSPI::ExecCommand(QIODevice *pIODevice, BRIDGE_CMDS cmd, QByteArr
             qWarning("Sending command was not completed!");
     }
     return bOK;
+}
+
+bool CZeraBridgeSPI::WriteRam(QIODevice *pIODeviceCtl, QIODevice *pIODeviceData, const TRam16Data &data, const quint32 ui32Address)
+{
+    m_SendRawData.clear();
+    /* cmd */
+    m_SendRawData.append(BRIDGE_CMD_SETUP_RAM_ACCESS);
+    /* address */
+    QByteArray addrArr;
+    quint32 ui32AddressWork = ui32Address;
+    for(int iAddrByte=0; iAddrByte<BRIDGE_SPI_FRAME_LEN-1; iAddrByte++)
+    {
+        addrArr.append((char)(ui32AddressWork >> 24));
+        ui32AddressWork = (ui32AddressWork << 8);
+    }
+    /* Write-enable */
+    addrArr[0] = addrArr[0] | 0x80;
+
+    /* Transfer 1 Write control command */
+    m_SendRawData.append(addrArr);
+    bool bOK = pIODeviceCtl->write(m_SendRawData) == BRIDGE_SPI_FRAME_LEN;
+    if(bOK)
+    {
+        QByteArray send16Word;
+        /* n-16bit transfers */
+        for(int iWord=0; iWord<data.count(); iWord++)
+        {
+            send16Word.clear();
+            qint16 i16Val = data[iWord];
+            send16Word.append((char)(i16Val>>8));
+            send16Word.append((char)(i16Val & 0xFF));
+            bOK = pIODeviceData->write(send16Word) == send16Word.count();
+            if(!bOK)
+            {
+                qWarning("Sending data to RAM was not completed!");
+                break;
+            }
+        }
+    }
+    else
+        qWarning("Sending control command to prepare RAM write was not completed!");
+    return bOK;
+}
+
+bool CZeraBridgeSPI::ReadRam(QIODevice *pIODeviceCtl, QIODevice *pIODeviceData, TRam16Data &data, const quint32 ui32Address, const quint32 ui32WordCount)
+{
+    m_SendRawData.clear();
+    m_ReceiveRawData.clear();
+    data.resize(ui32WordCount);
+    /* cmd */
+    m_SendRawData.append(BRIDGE_CMD_SETUP_RAM_ACCESS);
+    /* address */
+    QByteArray addrArr;
+    quint32 ui32AddressWork = ui32Address;
+    for(int iAddrByte=0; iAddrByte<BRIDGE_SPI_FRAME_LEN-1; iAddrByte++)
+    {
+        addrArr.append((char)(ui32AddressWork >> 24));
+        ui32AddressWork = (ui32AddressWork << 8);
+    }
+
+    /* Transfer 1 Write control command */
+    m_SendRawData.append(addrArr);
+    bool bOK = pIODeviceCtl->write(m_SendRawData) == BRIDGE_SPI_FRAME_LEN;
+    if(bOK)
+    {
+        QByteArray receive16Word;
+        qint16 i16Val;
+        /* n-16bit transfers */
+        for(quint32 ui32Word=0; ui32Word<ui32WordCount; ui32Word++)
+        {
+            receive16Word = pIODeviceData->read(2);
+            bOK = receive16Word.size() == 2;
+            if(bOK)
+            {
+                m_ReceiveRawData.append(receive16Word);
+                i16Val = (receive16Word[0] << 8 ) + receive16Word[1];
+                data[ui32Word] = i16Val;
+            }
+            else
+            {
+                qWarning("Reading data to RAM was not completed!");
+                break;
+            }
+        }
+    }
+    else
+        qWarning("Sending control command to prepare RAM read was not completed!");
+    return bOK;
+
 }
