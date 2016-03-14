@@ -17,12 +17,12 @@ int main(int argc, char *argv[])
     /* --------------- define params --------------- */
     // option for spi-bus
     QCommandLineOption busOption(QStringList() << "b" << "bus", "SPI bus number", "bus-no");
-    busOption.setDefaultValue("1");
+    busOption.setDefaultValue("2");
     parser.addOption(busOption);
 
     // option for spi-bus-ram
     QCommandLineOption busOptionRAM(QStringList() << "B" << "BUS", "SPI bus number for RAM", "bus-no");
-    busOptionRAM.setDefaultValue("2");
+    busOptionRAM.setDefaultValue("1");
     parser.addOption(busOptionRAM);
 
     // option for spi-channel
