@@ -8,11 +8,11 @@
 
 enum BRIDGE_CMDS
 {
-    BRIDGE_CMD_READ_VERSION = 0,
-    BRIDGE_CMD_READ_PCB1 = 1,
-    BRIDGE_CMD_READ_PCB2 = 2,
-    BRIDGE_CMD_READ_DEVICE = 3,
-    BRIDGE_CMD_SETUP_RAM_ACCESS = 10,
+    BRIDGE_CMD_READ_VERSION         = 0x00,
+    BRIDGE_CMD_READ_PCB1            = 0x01,
+    BRIDGE_CMD_READ_PCB2            = 0x02,
+    BRIDGE_CMD_READ_DEVICE          = 0x03,
+    BRIDGE_CMD_SETUP_RAM_ACCESS     = 0x10,
 };
 
 typedef QVector<qint16> TRam16Data;
