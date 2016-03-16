@@ -23,10 +23,15 @@ public:
     CZeraBridgeSPI();
     bool BootLCA(QIODevice *pIODevice, const QString& strLCABootFileName);
     bool ExecCommand(QIODevice *pIODevice, enum BRIDGE_CMDS cmd, QByteArray *pParamData = NULL);
+
+    bool PrepareWriteRam(QIODevice *pIODeviceCtl, const quint32 ui32Address);
+    bool WriteRam(QIODevice *pIODeviceData, const TRam16Data& data);
+
+    bool PrepareReadRam(QIODevice *pIODeviceCtl, const quint32 ui32Address);
+    bool ReadRam(QIODevice *pIODeviceData, TRam16Data& data, const quint32 ui32WordCount);
+
     const QByteArray& GetSendRawData() { return m_SendRawData; }
     const QByteArray& GetReceiveRawData() { return m_ReceiveRawData; }
-    bool WriteRam(QIODevice *pIODeviceCtl, QIODevice *pIODeviceData, const TRam16Data& data, const quint32 ui32Address);
-    bool ReadRam(QIODevice *pIODeviceCtl, QIODevice *pIODeviceData, TRam16Data& data, const quint32 ui32Address, const quint32 ui32WordCount);
 protected:
     QByteArray m_SendRawData;
     QByteArray m_ReceiveRawData;

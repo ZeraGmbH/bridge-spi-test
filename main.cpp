@@ -376,7 +376,9 @@ int main(int argc, char *argv[])
         if(!spiDeviceRAM.setBitsPerWord(spiBits))
             return -1;
 
-        if(!bridge.WriteRam(&spiDevice, &spiDeviceRAM, RamIoData, u32WriteRAMAddr))
+        if(!bridge.PrepareWriteRam(&spiDevice, u32WriteRAMAddr))
+            return -1;
+        if(!bridge.WriteRam(&spiDeviceRAM, RamIoData))
             return -1;
 
         spiDeviceRAM.close();
@@ -400,7 +402,9 @@ int main(int argc, char *argv[])
         if(!spiDeviceRAM.setBitsPerWord(spiBits))
             return -1;
 
-        if(!bridge.ReadRam(&spiDevice, &spiDeviceRAM, RamIoData, u32ReadRAMAddr, u32ReadRAMCount))
+        if(!bridge.PrepareReadRam(&spiDevice, u32ReadRAMAddr))
+            return -1;
+        if(!bridge.ReadRam(&spiDeviceRAM, RamIoData, u32ReadRAMCount))
             return -1;
 
         if(RamDataFile.isOpen())
