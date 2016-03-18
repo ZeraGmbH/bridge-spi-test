@@ -282,8 +282,8 @@ int main(int argc, char *argv[])
                                 qint64 ui64Val = str.toInt(&bNumberOK);
                                 if(bNumberOK)
                                 {
-                                    /* RAM is only 12 Bit wide */
-                                    if(ui64Val >= -2048 && ui64Val <= 2047)
+                                    /* RAM is only 16 Bit wide */
+                                    if(ui64Val >= -32768 && ui64Val <= 32767)
                                         RamIoData.append((qint16)ui64Val);
                                     else
                                     {
