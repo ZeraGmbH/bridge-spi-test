@@ -4,7 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       += core spidevice
+QT       += core
+QT       += spidevice bridgefmtspihelper
 
 QT       -= gui
 
@@ -15,11 +16,9 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 
-SOURCES += main.cpp \
-    czerabridgespi.cpp
+SOURCES += main.cpp
 
-HEADERS += \
-    czerabridgespi.h
+HEADERS +=
 
 target.path = /usr/bin
 INSTALLS += target

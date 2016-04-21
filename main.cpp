@@ -3,7 +3,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QSPIDevice>
-#include "czerabridgespi.h"
+#include <QBridgeFmtSpiHelper>
 
 
 int main(int argc, char *argv[])
@@ -334,7 +334,7 @@ int main(int argc, char *argv[])
 
     // Now setup required objects
     QSPIDevice spiDevice(spiBus, spiChannel);
-    CZeraBridgeSPI bridge;
+    QBridgeFmtSpiHelper bridge;
 
     /* Open SPI cfor control */
     if(!spiDevice.open(QIODevice::ReadWrite))
