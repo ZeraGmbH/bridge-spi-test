@@ -78,6 +78,10 @@ int main(int argc, char *argv[])
     QCommandLineOption ramDataOption(QStringList() << "d" << "datafilename", "Data Filename for RAM I/O", "filename");
     parser.addOption(ramDataOption);
 
+    // option remote-debug
+    QCommandLineOption remoteServerOption(QStringList() << "R" << "remote", "Connect remote device server", "IP:port");
+    parser.addOption(remoteServerOption);
+
     /* --------------- extract params --------------- */
     parser.process(a);
 
@@ -223,6 +227,34 @@ int main(int argc, char *argv[])
 
     }
 
+    QString strRemoteServerAddressPort = parser.value(remoteServerOption);
+    QString strRemoteIP;
+    qint16 ui16Port = 0;
+    bool bValidRemoteSetting = false;
+    if(!strRemoteServerAddressPort.isEmpty())
+    {
+        bValidRemoteSetting = true;
+        QStringList strList = strRemoteServerAddressPort.split(":");
+        if(strList.size() == 2)
+        {
+            // IP
+            if(!strList.at(0).isEmpty())
+                strRemoteIP = strList.at(0);
+            else
+                strRemoteIP = "localhost";
+            // Port
+            ui16Port = strList.at(1).toInt(&bValidRemoteSetting);
+        }
+        else
+            bValidRemoteSetting = false;
+
+        if(!bValidRemoteSetting)
+        {
+            qWarning("Parameter %s is not a valid hexadecimal number!\n", qPrintable(strReadRAMHex));
+            optionsOK = false;
+        }
+    }
+
     /* check for unknown arguments */
     if(parser.positionalArguments().size())
     {
@@ -333,6 +365,9 @@ int main(int argc, char *argv[])
     /* --------------- execute commands --------------- */
 
     // Now setup required objects
+    if(bValidRemoteSetting)
+        QSPIDevice::setRemoteServer(strRemoteIP, ui16Port);
+
     QSPIDevice spiDevice(spiBus, spiChannel);
     QBridgeFmtSpiHelper bridge;
 
