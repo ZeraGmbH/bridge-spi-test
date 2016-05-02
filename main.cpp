@@ -82,6 +82,10 @@ int main(int argc, char *argv[])
     QCommandLineOption remoteServerOption(QStringList() << "R" << "remote", "Connect remote device server", "IP:port");
     parser.addOption(remoteServerOption);
 
+    // option for max RAM block len
+    QCommandLineOption blocklenOption(QStringList() << "L" << "len", "Max blocklen [16bit]", "block-len-words");
+    parser.addOption(blocklenOption);
+
     /* --------------- extract params --------------- */
     parser.process(a);
 
@@ -255,6 +259,19 @@ int main(int argc, char *argv[])
         }
     }
 
+    QString strRAMBlockLen = parser.value(blocklenOption);
+    quint32 u32RAMBlockLen = 1;
+    if(!strRAMBlockLen.isEmpty())
+    {
+        bool bConversionOK = true;
+        u32RAMBlockLen = strRAMBlockLen.toLong(&bConversionOK, 10);
+        if(!bConversionOK)
+        {
+            qWarning("Parameter %s is not a valid number!\n", qPrintable(strRAMBlockLen));
+            optionsOK = false;
+        }
+    }
+
     /* check for unknown arguments */
     if(parser.positionalArguments().size())
     {
@@ -370,6 +387,7 @@ int main(int argc, char *argv[])
 
     QSPIDevice spiDevice(spiBus, spiChannel);
     QBridgeFmtSpiHelper bridge;
+    bridge.SetRAMBlockWordSize(u32RAMBlockLen);
 
     /* Open SPI cfor control */
     if(!spiDevice.open(QIODevice::ReadWrite))
