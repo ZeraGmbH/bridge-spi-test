@@ -22,3 +22,7 @@ HEADERS +=
 
 target.path = /usr/bin
 INSTALLS += target
+
+exists(localpaths.user.pri) {
+    include(localpaths.user.pri)
+}
