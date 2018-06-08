@@ -1,1 +1,5 @@
-*.pro.user
+*.user
+.*lock*
+*.user.pri
+*.pro.user*
+VersionHistoryBeagle.txt
