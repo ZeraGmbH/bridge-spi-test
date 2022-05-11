@@ -13,7 +13,7 @@ set(PROJECT_VERSION "${BRIDGESPITEST_VERSION_MAJOR}.${BRIDGESPITEST_VERSION_MINO
 include(FeatureSummary)
 include(GNUInstallDirs)
 
-find_package(Qt5 COMPONENTS Core CONFIG REQUIRED)
+find_package(Qt5 COMPONENTS Core Network CONFIG REQUIRED)
 find_package(remotecommon REQUIRED)
 find_package(spidevice REQUIRED)
 find_package(bridgefmtspihelper REQUIRED)
